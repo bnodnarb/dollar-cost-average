@@ -1,0 +1,39 @@
+<script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
+<script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
+
+<script>
+
+  var api_key = '6TwLGq5lB5deO5ZDTN692lHojSqU0hdCL98MZRMqq86XIr2mnlIAVYqaSsMAV65E'
+  var secret = 'tkmmkv2soTrwUA7goRCLvFMumVbRdrxNIElP1tNUGTlVhbf2GbnKBImaza1LSnSp'
+
+  var params = {
+      symbol: 'XLMBTC',
+      side: 'BUY',
+      type: 'MARKET',
+      quantity: 61,
+      recvWindow: 5000,
+      timestamp: Math.floor(Date.now() / 1000) * 1000
+  };
+
+  var queryString = $.param(params);
+
+  var hmac = forge.hmac.create();
+  hmac.start('sha256', secret);
+  hmac.update(queryString);
+  signature = hmac.digest().toHex();
+
+  const url = "http://localhost:4567/order?" + queryString + "&signature=" + signature + "&api_key=" + api_key;
+
+  console.log(url);
+
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("demo").innerHTML = this.responseText;
+    }
+  };
+  xhttp.open("GET", url, true);
+  xhttp.send();
+
+
+</script>
