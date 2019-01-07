@@ -10,7 +10,7 @@
       symbol: 'XLMBTC',
       side: 'BUY',
       type: 'MARKET',
-      quantity: 61,
+      quantity: 41,
       recvWindow: 5000,
       timestamp: Math.floor(Date.now() / 1000) * 1000
   };
@@ -29,7 +29,9 @@
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
-      document.getElementById("demo").innerHTML = this.responseText;
+      // document.getElementById("demo").innerHTML = this.responseText;
+      obj = JSON.parse(this.responseText);
+      console.log(JSON.stringify(obj, null, 2));
     }
   };
   xhttp.open("GET", url, true);
