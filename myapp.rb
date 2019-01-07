@@ -10,7 +10,7 @@ get '/' do
 end
 
 get '/order' do
-
+  headers['Access-Control-Allow-Origin'] = '*'
   symbol = params[:symbol].to_s
   side = params[:side].to_s
   type = params[:type].to_s
