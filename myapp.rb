@@ -10,7 +10,8 @@ get '/' do
 end
 
 get '/order' do
-  headers['Access-Control-Allow-Origin'] = '*'
+  # headers['Access-Control-Allow-Origin'] = '*'
+  content_type :json
   symbol = params[:symbol].to_s
   side = params[:side].to_s
   type = params[:type].to_s
