@@ -11,6 +11,10 @@ post '/generate_allocations' do
   request.body.rewind
   request_payload = JSON.parse request.body.read
 
+  LIMIT = request_payload['limit'].to_i
+  TYPE = request_payload['type'].to_s
+  UNBUFFERED_USDC_AMOUNT = request_payload['usdc_amount'].to_i
+  USDC_AMOUNT = UNBUFFERED_USDC_AMOUNT - (UNBUFFERED_USDC_AMOUNT * BUFFER)
 
 
   ETH_USDC_PRICE = get_usdc_price_of_eth()
@@ -26,8 +30,6 @@ post '/generate_allocations' do
   overview_allocations_and_orders = generate_overview_allocations_and_orders(overview,allocations,orders)
 
   overview_allocations_and_orders.to_json
-
-
 
   # request_payload.to_json
 end
