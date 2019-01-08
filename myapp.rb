@@ -6,11 +6,10 @@ require 'httparty'
 require 'openssl'
 
 get '/' do
-  'Hello world!'
+  send_file File.join(settings.public_folder, 'index.html')
 end
 
 get '/order' do
-  # headers['Access-Control-Allow-Origin'] = '*'
   content_type :json
   symbol = params[:symbol].to_s
   side = params[:side].to_s
