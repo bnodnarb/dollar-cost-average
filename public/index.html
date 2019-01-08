@@ -1,41 +1,125 @@
-<script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
-<script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
+<html>
+<head>
+  <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
+  <script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
+  <script>
 
-<script>
+    var api_key = '6TwLGq5lB5deO5ZDTN692lHojSqU0hdCL98MZRMqq86XIr2mnlIAVYqaSsMAV65E'
+    var secret = 'tkmmkv2soTrwUA7goRCLvFMumVbRdrxNIElP1tNUGTlVhbf2GbnKBImaza1LSnSp'
 
-  var api_key = '6TwLGq5lB5deO5ZDTN692lHojSqU0hdCL98MZRMqq86XIr2mnlIAVYqaSsMAV65E'
-  var secret = 'tkmmkv2soTrwUA7goRCLvFMumVbRdrxNIElP1tNUGTlVhbf2GbnKBImaza1LSnSp'
+    var params = {
+        symbol: 'XLMBTC',
+        side: 'BUY',
+        type: 'MARKET',
+        quantity: 41,
+        recvWindow: 5000,
+        timestamp: Math.floor(Date.now() / 1000) * 1000
+    };
 
-  var params = {
-      symbol: 'XLMBTC',
-      side: 'BUY',
-      type: 'MARKET',
-      quantity: 41,
-      recvWindow: 5000,
-      timestamp: Math.floor(Date.now() / 1000) * 1000
-  };
+    var queryString = $.param(params);
 
-  var queryString = $.param(params);
+    var hmac = forge.hmac.create();
+    hmac.start('sha256', secret);
+    hmac.update(queryString);
+    signature = hmac.digest().toHex();
 
-  var hmac = forge.hmac.create();
-  hmac.start('sha256', secret);
-  hmac.update(queryString);
-  signature = hmac.digest().toHex();
+    const url = "http://localhost:4567/order?" + queryString + "&signature=" + signature + "&api_key=" + api_key;
 
-  const url = "http://localhost:4567/order?" + queryString + "&signature=" + signature + "&api_key=" + api_key;
+    /*
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4 && this.status == 200) {
+        // document.getElementById("demo").innerHTML = this.responseText;
+        obj = JSON.parse(this.responseText);
+        console.log(JSON.stringify(obj, null, 2));
+      }
+    };
+    xhttp.open("GET", url, true);
+    xhttp.send();
+    */
 
-  console.log(url);
+    $(document).ready(function() {
+      $('#preloader').hide();
+      $("#generate_allocations").click(function(){
 
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      // document.getElementById("demo").innerHTML = this.responseText;
-      obj = JSON.parse(this.responseText);
-      console.log(JSON.stringify(obj, null, 2));
-    }
-  };
-  xhttp.open("GET", url, true);
-  xhttp.send();
+        $('#preloader').show();
+        document.getElementById("generate_allocations").disabled = true;
 
+        var usdc_amount,
+        element = document.getElementById('usdc_amount');
+        if (element != null) {
+          usdc_amount = parseInt(element.value);
+        }
+        else {
+          usdc_amount = null;
+        }
 
-</script>
+        if (usdc_amount < 100) {
+          alert("Minimum USDC Amount: 100")
+        }
+
+        limit = document.getElementById('limit').value;
+        type = document.getElementById('type').value;
+
+        allocation_specs = {
+          limit: limit,
+          type: type,
+          usdc_amount: usdc_amount
+        }
+
+        fetch('http://localhost:4567/generate_allocations', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(allocation_specs)
+          }).then(res=>res.json())
+          .then(res => {
+            console.log(res)
+            $('#preloader').hide();
+            document.getElementById("generate_allocations").disabled = false;
+          });
+
+      });
+    });
+
+  </script>
+</head>
+<body>
+  <h1>Binance Index</h1>
+  <p>hi there</p>
+  <!-- <input type="password" id="api_key" placeholder="Binance API Key"><br> -->
+  <!-- <input type="password" id="api_secret" placeholder="Binance API Secret"><br> -->
+  <input type="number" id="usdc_amount" placeholder="USDC Amount" min="100" max="500" style="width:100px;"><br>
+  <select name="limit" id="limit">
+    <option value=5>Top 5</option>
+    <option value=6>Top 6</option>
+    <option value=7>Top 7</option>
+    <option value=8>Top 8</option>
+    <option value=9>Top 9</option>
+    <option value=10>Top 10</option>
+    <option value=11>Top 11</option>
+    <option value=12>Top 12</option>
+    <option value=13>Top 13</option>
+    <option value=14>Top 14</option>
+    <option value=15>Top 15</option>
+    <option value=16>Top 16</option>
+    <option value=17>Top 17</option>
+    <option value=18>Top 18</option>
+    <option value=19>Top 19</option>
+    <option value=20>Top 20</option>
+    <option value=21>Top 21</option>
+    <option value=22>Top 22</option>
+    <option value=23>Top 23</option>
+    <option value=24>Top 24</option>
+    <option value=25>Top 25</option>
+  </select><br>
+  <select name="type" id="type">
+    <option value="coins">Coins Only</option>
+    <option value="tokens">Tokens Only</option>
+    <option value="all">Coins and Tokens</option>
+  </select><br>
+  <button id="generate_allocations">Generate Allocations</button> <img id="preloader" style="height: 12px;" src="https://loading.io/spinners/rolling/lg.curve-bars-loading-indicator.gif">
+
+</body>
+</html>

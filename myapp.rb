@@ -9,6 +9,14 @@ get '/' do
   send_file File.join(settings.public_folder, 'index.html')
 end
 
+post '/generate_allocations' do
+  content_type :json
+  request.body.rewind
+  request_payload = JSON.parse request.body.read
+  sleep 5
+  request_payload.to_json
+end
+
 get '/order' do
   content_type :json
   symbol = params[:symbol].to_s
