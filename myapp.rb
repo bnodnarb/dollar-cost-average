@@ -1,9 +1,6 @@
-# myapp.rb
 require 'sinatra'
-require 'json'
-require 'uri'
-require 'httparty'
-require 'openssl'
+
+require_relative 'includes.rb'
 
 get '/' do
   send_file File.join(settings.public_folder, 'index.html')
@@ -13,8 +10,26 @@ post '/generate_allocations' do
   content_type :json
   request.body.rewind
   request_payload = JSON.parse request.body.read
-  sleep 5
-  request_payload.to_json
+
+
+
+  ETH_USDC_PRICE = get_usdc_price_of_eth()
+  BTC_USDC_PRICE = get_usdc_price_of_btc()
+
+  binance_crypto_assets = get_binance_crypto_assets()
+  coinmarketcap_crypto_assets = get_coinmarketcap_crypto_assets()
+
+  relevant_crypto_assets = generate_relevant_crypto_assets(coinmarketcap_crypto_assets,binance_crypto_assets)
+  overview = generate_overview(coinmarketcap_crypto_assets,binance_crypto_assets)
+  allocations = generate_allocations(relevant_crypto_assets)
+  orders = generate_orders(allocations)
+  overview_allocations_and_orders = generate_overview_allocations_and_orders(overview,allocations,orders)
+
+  overview_allocations_and_orders.to_json
+
+
+
+  # request_payload.to_json
 end
 
 get '/order' do
