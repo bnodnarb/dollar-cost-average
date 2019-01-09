@@ -2,27 +2,10 @@
 <head>
 
 <style>
-
-  input[type="number"] {
+  input, button, select {
     width: 250px;
     height: 30px;
   }
-
-  input[type="password"] {
-    width: 250px;
-    height: 30px;
-  }
-
-  button {
-    width: 250px;
-    height: 30px;
-  }
-
-  select {
-    width: 250px;
-    height: 30px;
-  }
-
 </style>
 
   <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
@@ -65,23 +48,18 @@
     */
 
     $(document).ready(function() {
+
+      $('#plotlyGraph').hide();
+      $('#plotlyGraphPlaceholder').show();
+
       $("#generate_allocations").click(function(){
 
         document.getElementById("generate_allocations").disabled = true;
 
-        var usdc_amount,
-        element = document.getElementById('usdc_amount');
-        if (element != null) {
-          usdc_amount = parseInt(element.value);
-        }
-        else {
-          usdc_amount = null;
-        }
+        $('#plotlyGraph').hide();
+        $('#plotlyGraphPlaceholder').show();
 
-        if (usdc_amount < 100) {
-          alert("Minimum USDC Amount: 100")
-        }
-
+        usdc_amount = document.getElementById('usdc_amount').value;
         limit = document.getElementById('limit').value;
         type = document.getElementById('type').value;
 
@@ -100,6 +78,8 @@
           }).then(res=>res.json())
           .then(res => {
             console.log(res)
+            $('#plotlyGraph').show();
+            $('#plotlyGraphPlaceholder').hide();
             document.getElementById("generate_allocations").disabled = false;
 
             var plotlyX = []
@@ -132,14 +112,13 @@
 </head>
 <body>
   <h1>Accumul8.io</h1>
-  <p><pre>Welcome. Accumul8 is...</pre></p>
+  <p><pre>Welcome. Accumul8.io is an allocation platform for Binance.</pre></p>
   <p><input type="password" id="api_key" placeholder="Binance API Key"></p>
   <p><input type="password" id="api_secret" placeholder="Binance API Secret"></p>
   <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount" min="100" max="500"></p>
   <p>
     <select name="type" id="type">
       <option value="coins">Coins Only</option>
-      <!-- <option value="tokens">Tokens Only</option> -->
       <option value="all">Coins and Tokens</option>
     </select>
   </p>
@@ -169,6 +148,7 @@
     </select>
   </p>
   <p><button id="generate_allocations">Generate Allocations</button></p>
-  <p><div id="plotlyGraph" style="width:600px;height:250px; border:1px solid #000;"></div></p>
+  <p><div id="plotlyGraphPlaceholder" style="width:600px; height:250px; background-color:#ccc; border:1px solid #000;"></div></p>
+  <p><div id="plotlyGraph" style="width:600px; height:250px; border:1px solid #000;"></div></p>
 </body>
 </html>
