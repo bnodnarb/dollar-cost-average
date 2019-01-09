@@ -2,6 +2,7 @@
 <head>
   <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
   <script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script>
 
     var api_key = '6TwLGq5lB5deO5ZDTN692lHojSqU0hdCL98MZRMqq86XIr2mnlIAVYqaSsMAV65E'
@@ -78,8 +79,24 @@
             console.log(res)
             $('#preloader').hide();
             document.getElementById("generate_allocations").disabled = false;
-          });
 
+            var plotlyX = []
+            var plotlyY = []
+            var arrayLength = res.allocations.length;
+            for (var i = 0; i < arrayLength; i++) {
+              plotlyX.push(res.allocations[i]['symbol']);
+              plotlyY.push(res.allocations[i]['precise_allocation_usdc']);
+            }
+
+                var plotlyData = [
+                  {
+                    x: plotlyX,
+                    y: plotlyY,
+                    type: 'bar'
+                  }
+                ];
+                Plotly.newPlot('plotlyGraph', plotlyData);
+          });
       });
     });
 
@@ -91,6 +108,11 @@
   <!-- <input type="password" id="api_key" placeholder="Binance API Key"><br> -->
   <!-- <input type="password" id="api_secret" placeholder="Binance API Secret"><br> -->
   <input type="number" id="usdc_amount" placeholder="USDC Amount" min="100" max="500" style="width:100px;"><br>
+  <select name="type" id="type">
+    <option value="coins">Coins Only</option>
+    <!-- <option value="tokens">Tokens Only</option> -->
+    <option value="all">Coins and Tokens</option>
+  </select><br>
   <select name="limit" id="limit">
     <option value=5>Top 5</option>
     <option value=6>Top 6</option>
@@ -114,12 +136,8 @@
     <option value=24>Top 24</option>
     <option value=25>Top 25</option>
   </select><br>
-  <select name="type" id="type">
-    <option value="coins">Coins Only</option>
-    <option value="tokens">Tokens Only</option>
-    <option value="all">Coins and Tokens</option>
-  </select><br>
   <button id="generate_allocations">Generate Allocations</button> <img id="preloader" style="height: 12px;" src="https://loading.io/spinners/rolling/lg.curve-bars-loading-indicator.gif">
 
+  <div id="plotlyGraph" style="width:600px;height:250px;"></div>
 </body>
 </html>
