@@ -1,5 +1,30 @@
 <html>
 <head>
+
+<style>
+
+  input[type="number"] {
+    width: 250px;
+    height: 30px;
+  }
+
+  input[type="password"] {
+    width: 250px;
+    height: 30px;
+  }
+
+  button {
+    width: 250px;
+    height: 30px;
+  }
+
+  select {
+    width: 250px;
+    height: 30px;
+  }
+
+</style>
+
   <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
   <script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -40,10 +65,8 @@
     */
 
     $(document).ready(function() {
-      $('#preloader').hide();
       $("#generate_allocations").click(function(){
 
-        $('#preloader').show();
         document.getElementById("generate_allocations").disabled = true;
 
         var usdc_amount,
@@ -77,7 +100,6 @@
           }).then(res=>res.json())
           .then(res => {
             console.log(res)
-            $('#preloader').hide();
             document.getElementById("generate_allocations").disabled = false;
 
             var plotlyX = []
@@ -95,7 +117,13 @@
                     type: 'bar'
                   }
                 ];
-                Plotly.newPlot('plotlyGraph', plotlyData);
+
+                var layout = {
+                  title: 'Allocations: Top ' + limit,
+                  showlegend: false
+                };
+
+                Plotly.newPlot('plotlyGraph', plotlyData, layout, {displayModeBar: false});
           });
       });
     });
@@ -103,41 +131,44 @@
   </script>
 </head>
 <body>
-  <h1>Binance Index</h1>
-  <p>hi there</p>
-  <!-- <input type="password" id="api_key" placeholder="Binance API Key"><br> -->
-  <!-- <input type="password" id="api_secret" placeholder="Binance API Secret"><br> -->
-  <input type="number" id="usdc_amount" placeholder="USDC Amount" min="100" max="500" style="width:100px;"><br>
-  <select name="type" id="type">
-    <option value="coins">Coins Only</option>
-    <!-- <option value="tokens">Tokens Only</option> -->
-    <option value="all">Coins and Tokens</option>
-  </select><br>
-  <select name="limit" id="limit">
-    <option value=5>Top 5</option>
-    <option value=6>Top 6</option>
-    <option value=7>Top 7</option>
-    <option value=8>Top 8</option>
-    <option value=9>Top 9</option>
-    <option value=10>Top 10</option>
-    <option value=11>Top 11</option>
-    <option value=12>Top 12</option>
-    <option value=13>Top 13</option>
-    <option value=14>Top 14</option>
-    <option value=15>Top 15</option>
-    <option value=16>Top 16</option>
-    <option value=17>Top 17</option>
-    <option value=18>Top 18</option>
-    <option value=19>Top 19</option>
-    <option value=20>Top 20</option>
-    <option value=21>Top 21</option>
-    <option value=22>Top 22</option>
-    <option value=23>Top 23</option>
-    <option value=24>Top 24</option>
-    <option value=25>Top 25</option>
-  </select><br>
-  <button id="generate_allocations">Generate Allocations</button> <img id="preloader" style="height: 12px;" src="https://loading.io/spinners/rolling/lg.curve-bars-loading-indicator.gif">
-
-  <div id="plotlyGraph" style="width:600px;height:250px;"></div>
+  <h1>Accumul8.io</h1>
+  <p><pre>Welcome. Accumul8 is...</pre></p>
+  <p><input type="password" id="api_key" placeholder="Binance API Key"></p>
+  <p><input type="password" id="api_secret" placeholder="Binance API Secret"></p>
+  <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount" min="100" max="500"></p>
+  <p>
+    <select name="type" id="type">
+      <option value="coins">Coins Only</option>
+      <!-- <option value="tokens">Tokens Only</option> -->
+      <option value="all">Coins and Tokens</option>
+    </select>
+  </p>
+  <p>
+    <select name="limit" id="limit">
+      <option value=5>Top 5</option>
+      <option value=6>Top 6</option>
+      <option value=7>Top 7</option>
+      <option value=8>Top 8</option>
+      <option value=9>Top 9</option>
+      <option value=10>Top 10</option>
+      <option value=11>Top 11</option>
+      <option value=12>Top 12</option>
+      <option value=13>Top 13</option>
+      <option value=14>Top 14</option>
+      <option value=15>Top 15</option>
+      <option value=16>Top 16</option>
+      <option value=17>Top 17</option>
+      <option value=18>Top 18</option>
+      <option value=19>Top 19</option>
+      <option value=20>Top 20</option>
+      <option value=21>Top 21</option>
+      <option value=22>Top 22</option>
+      <option value=23>Top 23</option>
+      <option value=24>Top 24</option>
+      <option value=25>Top 25</option>
+    </select>
+  </p>
+  <p><button id="generate_allocations">Generate Allocations</button></p>
+  <p><div id="plotlyGraph" style="width:600px;height:250px; border:1px solid #000;"></div></p>
 </body>
 </html>
