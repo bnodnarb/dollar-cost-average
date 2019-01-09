@@ -113,8 +113,6 @@
 <body>
   <h1>Accumul8.io</h1>
   <p><pre>Welcome. Accumul8.io is an allocation platform for Binance.</pre></p>
-  <p><input type="password" id="api_key" placeholder="Binance API Key"></p>
-  <p><input type="password" id="api_secret" placeholder="Binance API Secret"></p>
   <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount" min="100" max="500"></p>
   <p>
     <select name="type" id="type">
@@ -148,7 +146,11 @@
     </select>
   </p>
   <p><button id="generate_allocations">Generate Allocations</button></p>
-  <p><div id="plotlyGraphPlaceholder" style="width:600px; height:250px; background-color:#ccc; border:1px solid #000;"></div></p>
-  <p><div id="plotlyGraph" style="width:600px; height:250px; border:1px solid #000;"></div></p>
+  <hr size='1'>
+  <p><div id="plotlyGraphPlaceholder" style="width:600px; height:250px; background-color:#eee; border:1px solid #ccc;">Allocation Chart will Appear Here.</div></p>
+  <p><div id="plotlyGraph" style="width:600px; height:250px;"></div></p>
+  <hr size='1'>
+  <p><input type="password" id="api_key" placeholder="Binance API Key"> <i>Your Binance API Key</i></p>
+  <p><input type="password" id="api_secret" placeholder="Binance API Secret"></p>
 </body>
 </html>
