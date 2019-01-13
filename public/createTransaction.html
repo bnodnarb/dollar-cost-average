@@ -29,29 +29,53 @@ value:[{name:"PBES2Algorithms.keyDerivationFunc",tagClass:u.Class.UNIVERSAL,type
 
 <script>
 
-  var api_key = '6TwLGq5lB5deO5ZDTN692lHojSqU0hdCL98MZRMqq86XIr2mnlIAVYqaSsMAV65E'
-  var secret = 'tkmmkv2soTrwUA7goRCLvFMumVbRdrxNIElP1tNUGTlVhbf2GbnKBImaza1LSnSp'
+  function generateSignedOrders() {
 
-  var params = {
-      symbol: 'XLMBTC',
-      side: 'BUY',
-      type: 'MARKET',
-      quantity: 53,
-      recvWindow: 60000,
-      timestamp: Math.floor(Date.now() / 1000) * 1000
-  };
+    api_key = document.getElementById('api_key').value;
+    secret = document.getElementById('api_secret').value;
 
-  queryString = Object.keys(params).map(function(k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k])
-  }).join('&')
+    orders = JSON.parse(document.getElementById('orders').value);
+    signed_orders = {};
+    var ordersLength = orders.length;
+    for (var i = 0; i < ordersLength; i++) {
+      var order = orders[i];
+      var params = {
+          symbol: order.symbol,
+          side: 'BUY',
+          type: 'MARKET',
+          quantity: order.quantity,
+          recvWindow: 60000,
+          timestamp: Math.floor(Date.now() / 1000) * 1000
+      };
 
-  var hmac = forge.hmac.create();
-  hmac.start('sha256', secret);
-  hmac.update(queryString);
-  signature = hmac.digest().toHex();
+      queryString = Object.keys(params).map(function(k) {
+          return encodeURIComponent(k) + '=' + encodeURIComponent(params[k])
+      }).join('&')
 
-  const url = "http://localhost:4567/order?" + queryString + "&signature=" + signature + "&api_key=" + api_key;
+      var hmac = forge.hmac.create();
+      hmac.start('sha256', secret);
+      hmac.update(queryString);
+      signature = hmac.digest().toHex();
 
-  console.log(url);
+      const url = queryString + "&signature=" + signature + "&api_key=" + api_key;
+
+      orders[i].signedOrder = url;
+    }
+    console.log(orders);
+    document.getElementById("signed_orders").innerHTML = '<pre>' + JSON.stringify(orders,null,2) + '</pre>';
+  }
 
 </script>
+
+<style>
+  input, button, select {
+    width: 250px;
+    height: 30px;
+  }
+</style>
+
+<p><input type="password" id="api_key" placeholder="Binance API Key"> <i>Your Binance API Key</i></p>
+<p><input type="password" id="api_secret" placeholder="Binance API Secret"> <i>Your Binance API Secret Key</i></p>
+<p><textarea name="orders" id="orders" placeholder="Orders" rows="25" cols="80"></textarea></p>
+<p><button id="generate_signed_orders" onclick="generateSignedOrders();">Generate Signed Orders</button></p>
+<p><div id="signed_orders"></div></p>
