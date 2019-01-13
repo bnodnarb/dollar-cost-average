@@ -77,7 +77,9 @@
         body: JSON.stringify(allocation_specs)
           }).then(res=>res.json())
           .then(res => {
-            console.log(res)
+            console.log(res);
+            console.log(res.orders);
+            document.getElementById("orderBox").innerHTML = '<pre>' + JSON.stringify(res.orders,null,2) + '</pre>';
             $('#plotlyGraph').show();
             $('#plotlyGraphPlaceholder').hide();
             document.getElementById("generate_allocations").disabled = false;
@@ -150,7 +152,6 @@
   <p><div id="plotlyGraphPlaceholder" style="width:600px; height:250px; background-color:#eee; border:1px solid #ccc;">Allocation Chart will Appear Here.</div></p>
   <p><div id="plotlyGraph" style="width:600px; height:250px;"></div></p>
   <hr size='1'>
-  <p><input type="password" id="api_key" placeholder="Binance API Key"> <i>Your Binance API Key</i></p>
-  <p><input type="password" id="api_secret" placeholder="Binance API Secret"></p>
+  <p><div id="orderBox"></div></p>
 </body>
 </html>
