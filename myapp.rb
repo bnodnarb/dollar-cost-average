@@ -6,6 +6,10 @@ get '/' do
   send_file File.join(settings.public_folder, 'index.html')
 end
 
+get '/createTransaction' do
+  send_file File.join(settings.public_folder, 'createTransaction.html')
+end
+
 post '/generate_allocations' do
   content_type :json
   request.body.rewind
