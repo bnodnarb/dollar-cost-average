@@ -11,7 +11,13 @@
   <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
   <script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+
   <script>
+
+    window.onload=function(){
+      new ClipboardJS('.btn');
+    }
 
     var api_key = '6TwLGq5lB5deO5ZDTN692lHojSqU0hdCL98MZRMqq86XIr2mnlIAVYqaSsMAV65E'
     var secret = 'tkmmkv2soTrwUA7goRCLvFMumVbRdrxNIElP1tNUGTlVhbf2GbnKBImaza1LSnSp'
@@ -152,6 +158,7 @@
   <p><div id="plotlyGraphPlaceholder" style="width:600px; height:250px; background-color:#eee; border:1px solid #ccc;">Allocation Chart will Appear Here.</div></p>
   <p><div id="plotlyGraph" style="width:600px; height:250px;"></div></p>
   <hr size='1'>
+  <p><button class="btn" data-clipboard-action="copy" data-clipboard-target="#orderBox">Copy Orders</button></p>
   <p><div id="orderBox"></div></p>
 </body>
 </html>
