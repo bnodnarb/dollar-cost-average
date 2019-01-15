@@ -40,31 +40,29 @@
 
     const url = "http://localhost:4567/order?" + queryString + "&signature=" + signature + "&api_key=" + api_key;
 
-    /*
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-      if (this.readyState == 4 && this.status == 200) {
-        // document.getElementById("demo").innerHTML = this.responseText;
-        obj = JSON.parse(this.responseText);
-        console.log(JSON.stringify(obj, null, 2));
-      }
-    };
-    xhttp.open("GET", url, true);
-    xhttp.send();
-    */
+    function clearAllocations() {
+      hideResults();
+    }
+
+    function hideResults() {
+      $('.hideable').hide();
+    }
 
     $(document).ready(function() {
 
+      document.getElementById("usdc_amount").onchange = function() {clearAllocations()};
+
       $('#plotlyGraph').hide();
+      $('.hideable').hide();
       $('#plotlyGraphPlaceholder').show();
       $('#copyOrders').hide();
-      $('#orderBox').show();
 
       $('#copyOrders').click(function(){
         alert('Orders Copied');
       });
 
       $("#generate_allocations").click(function(){
+        $('.hideable').hide();
 
         document.getElementById("generate_allocations").disabled = true;
 
@@ -95,6 +93,7 @@
             $('#plotlyGraph').show();
             $('#plotlyGraphPlaceholder').hide();
             $('#copyOrders').show();
+            $('.hideable').show();
             document.getElementById("generate_allocations").disabled = false;
 
             var plotlyX = []
@@ -130,13 +129,13 @@
   <p><pre>Welcome. Accumul8.io is an allocation platform for Binance.</pre></p>
   <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount" min="100" max="500"></p>
   <p>
-    <select name="type" id="type">
+    <select name="type" id="type" onchange="clearAllocations()">
       <option value="coins">Coins Only</option>
       <option value="all">Coins and Tokens</option>
     </select>
   </p>
   <p>
-    <select name="limit" id="limit">
+    <select name="limit" id="limit" onchange="clearAllocations()">
       <option value=5>Top 5</option>
       <option value=6>Top 6</option>
       <option value=7>Top 7</option>
@@ -161,11 +160,10 @@
     </select>
   </p>
   <p><button id="generate_allocations">Generate Allocations</button></p>
-  <hr size='1'>
-  <p><div id="plotlyGraphPlaceholder" style="width:600px; height:250px; background-color:#eee; border:1px solid #ccc;">Allocation Chart will Appear Here.</div></p>
-  <p><div id="plotlyGraph" style="width:600px; height:250px;"></div></p>
-  <hr size='1'>
-  <p><button id="copyOrders" class="btn" data-clipboard-action="copy" data-clipboard-target="#orderBox">Copy Orders</button></p>
+  <hr class="hideable" size='1'>
+  <p><div class="hideable" id="plotlyGraph" style="width:600px; height:250px;"></div></p>
+  <hr class="hideable" size='1'>
+  <p><button id="copyOrders" class="btn hideable" data-clipboard-action="copy" data-clipboard-target="#orderBox">Copy Orders</button></p>
 
   <div style="position:absolute; top:0; left:-500px;">
     <p><div id="orderBox"></div></p>
