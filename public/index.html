@@ -15,60 +15,32 @@
 
   <script>
 
-    window.onload=function(){
-      new ClipboardJS('.btn');
+  var orders;
+
+    function showStepOne() {
+      $('.stepOne').show();
+      $('.stepTwo').hide();
+      $('.stepThree').hide();
     }
 
-    var api_key = '6TwLGq5lB5deO5ZDTN692lHojSqU0hdCL98MZRMqq86XIr2mnlIAVYqaSsMAV65E'
-    var secret = 'tkmmkv2soTrwUA7goRCLvFMumVbRdrxNIElP1tNUGTlVhbf2GbnKBImaza1LSnSp'
-
-    var params = {
-        symbol: 'XLMBTC',
-        side: 'BUY',
-        type: 'MARKET',
-        quantity: 41,
-        recvWindow: 5000,
-        timestamp: Math.floor(Date.now() / 1000) * 1000
-    };
-
-    var queryString = $.param(params);
-
-    var hmac = forge.hmac.create();
-    hmac.start('sha256', secret);
-    hmac.update(queryString);
-    signature = hmac.digest().toHex();
-
-    const url = "http://localhost:4567/order?" + queryString + "&signature=" + signature + "&api_key=" + api_key;
-
-    function clearAllocations() {
-      hideResults();
+    function showStepTwo() {
+      $('.stepOne').hide();
+      $('.stepTwo').show();
+      $('.stepThree').hide();
     }
 
-    function hideResults() {
-      $('.hideable').hide();
+    function showStepThree() {
+      $('.stepOne').hide();
+      $('.stepTwo').hide();
+      $('.stepThree').show();
     }
 
     $(document).ready(function() {
 
-      document.getElementById("usdc_amount").onchange = function() {clearAllocations()};
-
-      $('#plotlyGraph').hide();
-      $('.hideable').hide();
-      $('#plotlyGraphPlaceholder').show();
-      $('#copyOrders').hide();
-
-      $('#copyOrders').click(function(){
-        alert('Orders Copied');
-      });
+      showStepOne();
 
       $("#generate_allocations").click(function(){
-        $('.hideable').hide();
-
-        document.getElementById("generate_allocations").disabled = true;
-
-        $('#plotlyGraph').hide();
-        $('#plotlyGraphPlaceholder').show();
-
+        showStepTwo();
         usdc_amount = document.getElementById('usdc_amount').value;
         limit = document.getElementById('limit').value;
         type = document.getElementById('type').value;
@@ -84,58 +56,76 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(allocation_specs)
-          }).then(res=>res.json())
-          .then(res => {
+        body: JSON.stringify(allocation_specs)}).then(res=>res.json()).then(res => {
             console.log(res);
-            console.log(res.orders);
-            document.getElementById("orderBox").innerHTML = '<pre>' + JSON.stringify(res.orders,null,2) + '</pre>';
-            $('#plotlyGraph').show();
-            $('#plotlyGraphPlaceholder').hide();
-            $('#copyOrders').show();
-            $('.hideable').show();
-            document.getElementById("generate_allocations").disabled = false;
+
+            orders = res.orders;
 
             var plotlyX = []
             var plotlyY = []
-            var arrayLength = res.allocations.length;
-            for (var i = 0; i < arrayLength; i++) {
+            for (var i = 0; i < res.allocations.length; i++) {
               plotlyX.push(res.allocations[i]['symbol']);
               plotlyY.push(res.allocations[i]['precise_allocation_usdc']);
             }
+            var plotlyData = [{x: plotlyX, y: plotlyY, type: 'bar'}];
+            var layout = {title: 'Allocations: Top ' + limit, showlegend: false};
+            Plotly.newPlot('plotlyGraph', plotlyData, layout, {displayModeBar: false});
 
-                var plotlyData = [
-                  {
-                    x: plotlyX,
-                    y: plotlyY,
-                    type: 'bar'
-                  }
-                ];
-
-                var layout = {
-                  title: 'Allocations: Top ' + limit,
-                  showlegend: false
-                };
-
-                Plotly.newPlot('plotlyGraph', plotlyData, layout, {displayModeBar: false});
-          });
+        });
       });
+
+      $("#generate_signed_orders").click(function(){
+        api_key = document.getElementById('api_key').value;
+        secret = document.getElementById('api_secret').value;
+
+        for (var i = 0; i < orders.length; i++) {
+          var order = orders[i];
+          var params = {
+              symbol: order.symbol,
+              side: 'BUY',
+              type: 'MARKET',
+              quantity: order.quantity,
+              recvWindow: 60000,
+              timestamp: Math.floor(Date.now() / 1000) * 1000
+          };
+
+          queryString = Object.keys(params).map(function(k) {
+              return encodeURIComponent(k) + '=' + encodeURIComponent(params[k])
+          }).join('&')
+
+          var hmac = forge.hmac.create();
+          hmac.start('sha256', secret);
+          hmac.update(queryString);
+          signature = hmac.digest().toHex();
+
+          orders[i].signedOrder = queryString + "&signature=" + signature + "&api_key=" + api_key;;
+        }
+        console.log(orders);
+      });
+
+
+
     });
 
   </script>
 </head>
+
+
+
+
+
 <body>
   <h1>Accumul8.io</h1>
   <p><pre>Welcome. Accumul8.io is an allocation platform for Binance.</pre></p>
-  <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount" min="100" max="500"></p>
+  <p><input type="number" id="usdc_amount" class="usdc_amount stepOne" placeholder="USDC Amount" min="100" max="500"></p>
   <p>
-    <select name="type" id="type" onchange="clearAllocations()">
+    <select name="type" id="type" class="stepOne">
       <option value="coins">Coins Only</option>
       <option value="all">Coins and Tokens</option>
     </select>
   </p>
   <p>
-    <select name="limit" id="limit" onchange="clearAllocations()">
+    <select name="limit" id="limit" class="stepOne">
       <option value=5>Top 5</option>
       <option value=6>Top 6</option>
       <option value=7>Top 7</option>
@@ -152,22 +142,13 @@
       <option value=18>Top 18</option>
       <option value=19>Top 19</option>
       <option value=20>Top 20</option>
-      <option value=21>Top 21</option>
-      <option value=22>Top 22</option>
-      <option value=23>Top 23</option>
-      <option value=24>Top 24</option>
-      <option value=25>Top 25</option>
     </select>
   </p>
-  <p><button id="generate_allocations">Generate Allocations</button></p>
-  <hr class="hideable" size='1'>
-  <p><div class="hideable" id="plotlyGraph" style="width:600px; height:250px;"></div></p>
-  <hr class="hideable" size='1'>
-  <p><button id="copyOrders" class="btn hideable" data-clipboard-action="copy" data-clipboard-target="#orderBox">Copy Orders</button></p>
+  <p><button id="generate_allocations" class="stepOne">Generate Allocations</button></p>
 
-  <div style="position:absolute; top:0; left:-500px;">
-    <p><div id="orderBox"></div></p>
-  </div>
-
+  <p><div class="stepTwo" id="plotlyGraph" style="width:600px; height:250px;"></div></p>
+  <p><input type="password" id="api_key" placeholder="Binance API Key" class="stepTwo"> <i class="stepTwo">Your Binance API Key</i></p>
+  <p><input type="password" id="api_secret" placeholder="Binance API Secret" class="stepTwo"> <i class="stepTwo">Your Binance API Secret Key</i></p>
+  <p><button id="generate_signed_orders" class="stepTwo">Generate Signed Orders</button></p>
 </body>
 </html>
