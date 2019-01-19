@@ -11,7 +11,6 @@
   <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
   <script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
 
   <script>
 
@@ -75,6 +74,7 @@
       });
 
       $("#generate_signed_orders").click(function(){
+        showStepThree();
         api_key = document.getElementById('api_key').value;
         secret = document.getElementById('api_secret').value;
 
@@ -98,12 +98,30 @@
           hmac.update(queryString);
           signature = hmac.digest().toHex();
 
-          orders[i].signedOrder = queryString + "&signature=" + signature + "&api_key=" + api_key;;
+          orders[i].symbol = order.symbol;
+          orders[i].side = 'BUY';
+          orders[i].type = 'MARKET';
+          orders[i].quantity = order.quantity;
+          orders[i].recvWindow = 60000;
+          orders[i].timestamp = Math.floor(Date.now() / 1000) * 1000;
+          orders[i].signature = signature;
+          orders[i].api_key = api_key
         }
         console.log(orders);
+        document.getElementById("signed_orders").innerHTML = '<pre>' + JSON.stringify(orders,null,2) + '</pre>';
       });
 
+      $("#place_orders").click(function(){
 
+        fetch('http://localhost:4567/place_orders', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orders)}).then(res=>res.json()).then(res => {
+            console.log(res);
+        });
+      });
 
     });
 
@@ -150,5 +168,8 @@
   <p><input type="password" id="api_key" placeholder="Binance API Key" class="stepTwo"> <i class="stepTwo">Your Binance API Key</i></p>
   <p><input type="password" id="api_secret" placeholder="Binance API Secret" class="stepTwo"> <i class="stepTwo">Your Binance API Secret Key</i></p>
   <p><button id="generate_signed_orders" class="stepTwo">Generate Signed Orders</button></p>
+
+  <p><div id="signed_orders"></div></p>
+  <p><button id="place_orders" class="stepThree">Place Orders</button></p>
 </body>
 </html>
