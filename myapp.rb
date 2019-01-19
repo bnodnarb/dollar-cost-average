@@ -20,7 +20,6 @@ post '/generate_allocations' do
   UNBUFFERED_USDC_AMOUNT = request_payload['usdc_amount'].to_i
   USDC_AMOUNT = UNBUFFERED_USDC_AMOUNT - (UNBUFFERED_USDC_AMOUNT * BUFFER)
 
-
   ETH_USDC_PRICE = get_usdc_price_of_eth()
   BTC_USDC_PRICE = get_usdc_price_of_btc()
 
@@ -34,8 +33,47 @@ post '/generate_allocations' do
   overview_allocations_and_orders = generate_overview_allocations_and_orders(overview,allocations,orders)
 
   overview_allocations_and_orders.to_json
+end
 
-  # request_payload.to_json
+post '/place_orders' do
+  content_type :json
+  request.body.rewind
+  request_payload = JSON.parse request.body.read
+
+  request_payload.each do |order|
+    symbol = order['symbol'].to_s
+    side = order['side'].to_s
+    type = order['type'].to_s
+    quantity = order['quantity'].to_s
+    timestamp = order['timestamp'].to_s
+    signature = order['signature'].to_s
+    api_key = order['api_key'].to_s
+    recvWindow = order['recvWindow'].to_s
+
+    params = {
+        symbol: symbol,
+        side: side,
+        type: type,
+        quantity: quantity,
+        recvWindow: recvWindow,
+        timestamp: timestamp,
+        signature: signature
+    }
+
+    BASE_URL = 'https://api.binance.com'
+    uri = URI("#{BASE_URL}/api/v3/order")
+
+    headers = {
+      'X-MBX-APIKEY': api_key,
+      'Content-Type': 'text/json'
+    }
+
+    binance_response = HTTParty.post(uri, headers: headers, body: params)
+
+    puts binance_response.body
+  end
+
+  request_payload.to_json
 end
 
 get '/order' do
