@@ -30,6 +30,31 @@
       }
     }
 
+    function setCookie(name,value,days) {
+      var expires = "";
+      if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+      }
+      document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(';');
+      for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+      }
+      return null;
+    }
+
+    function eraseCookie(name) {
+      document.cookie = name+'=; Max-Age=-99999999;';
+    }
+
     function showStepOne() {
       $('.stepOne').show();
       $('.stepTwo').hide();
@@ -82,6 +107,15 @@
             // console.log(res);
             showStepTwo();
 
+            var binance_api_key = getCookie('bk1');
+            if (binance_api_key) {
+              document.getElementById('api_key').value = binance_api_key;
+            }
+            var binance_api_secret = getCookie('bk2');
+            if (binance_api_secret) {
+              document.getElementById('api_secret').value = binance_api_secret;
+            }
+
             orders = res.orders;
 
             var plotlyX = []
@@ -100,7 +134,17 @@
       $("#generate_signed_orders").click(function(){
         showStepThree();
         api_key = document.getElementById('api_key').value;
-        secret = document.getElementById('api_secret').value;
+        api_secret = document.getElementById('api_secret').value;
+
+        store_api_details = document.getElementById('store_api_details').checked;
+        if (store_api_details === true) {
+          setCookie('bk1',api_key,7);
+          setCookie('bk2',api_secret,7);
+        } else {
+          eraseCookie('bk1');
+          eraseCookie('bk2');
+        }
+
 
         for (var i = 0; i < orders.length; i++) {
           var order = orders[i];
@@ -118,7 +162,7 @@
           }).join('&')
 
           var hmac = forge.hmac.create();
-          hmac.start('sha256', secret);
+          hmac.start('sha256', api_secret);
           hmac.update(queryString);
           signature = hmac.digest().toHex();
 
@@ -194,9 +238,14 @@
   </div>
 
   <div class="stepTwo hideAtLoad">
-    <p><div id="plotlyGraph" style="width:600px; height:250px;"></div></p>
-    <p><input type="password" id="api_key" placeholder="Binance API Key">
-    <p><input type="password" id="api_secret" placeholder="Binance API Secret">
+    <p><div id="plotlyGraph" style="width:1000px; height:350px;"></div></p>
+    <fieldset>
+      <legend>Binance API Details</legend>
+      <p><input type="password" id="api_key" placeholder="Binance API Key"></p>
+      <p><input type="password" id="api_secret" placeholder="Binance API Secret"></p>
+      <p><input type="checkbox" id="store_api_details">
+      <label for="store_api_details">Check to keep API details in browser for 7 days (unchecking will erase)</label></p>
+    </fieldset>
     <p><button id="generate_signed_orders">Generate Signed Orders</button></p>
     <p><button class="begin_again">Cancel</button></p>
   </div>
