@@ -20,24 +20,33 @@
       $('.stepOne').show();
       $('.stepTwo').hide();
       $('.stepThree').hide();
+      $('.stepFour').hide();
     }
 
     function showStepTwo() {
       $('.stepOne').hide();
       $('.stepTwo').show();
       $('.stepThree').hide();
+      $('.stepFour').hide();
     }
 
     function showStepThree() {
       $('.stepOne').hide();
       $('.stepTwo').hide();
       $('.stepThree').show();
+      $('.stepFour').hide();
+    }
+
+    function showStepFour() {
+      $('.stepOne').hide();
+      $('.stepTwo').hide();
+      $('.stepThree').hide();
+      $('.stepFour').show();
     }
 
     $(document).ready(function() {
 
       showStepOne();
-
       $("#generate_allocations").click(function(){
         showStepTwo();
         usdc_amount = document.getElementById('usdc_amount').value;
@@ -119,7 +128,8 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(orders)}).then(res=>res.json()).then(res => {
-            console.log(res);
+          showStepFour();
+          console.log(res);
         });
       });
 
@@ -169,7 +179,9 @@
   <p><input type="password" id="api_secret" placeholder="Binance API Secret" class="stepTwo"> <i class="stepTwo">Your Binance API Secret Key</i></p>
   <p><button id="generate_signed_orders" class="stepTwo">Generate Signed Orders</button></p>
 
-  <p><div id="signed_orders"></div></p>
+  <p><div id="signed_orders" class="stepThree"></div></p>
   <p><button id="place_orders" class="stepThree">Place Orders</button></p>
+
+  <p><div id="orders_complete" class="stepFour">Your Orders are Complete</div></p>
 </body>
 </html>
