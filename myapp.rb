@@ -75,7 +75,7 @@ post '/place_orders' do
     else
       puts 'success'
       order['response']['status'] = 'Success'
-      order['response']['message'] = 'Order Successful'
+      order['response']['message'] = 'Order Placed'
     end
   end
 
