@@ -6,10 +6,6 @@ get '/' do
   send_file File.join(settings.public_folder, 'index.html')
 end
 
-get '/createTransaction' do
-  send_file File.join(settings.public_folder, 'createTransaction.html')
-end
-
 post '/generate_allocations' do
   content_type :json
   request.body.rewind
@@ -40,6 +36,9 @@ post '/place_orders' do
   request.body.rewind
   request_payload = JSON.parse request.body.read
 
+  BASE_URL = 'https://api.binance.com'
+  uri = URI("#{BASE_URL}/api/v3/order")
+
   request_payload.each do |order|
     symbol = order['symbol'].to_s
     side = order['side'].to_s
@@ -60,9 +59,6 @@ post '/place_orders' do
         signature: signature
     }
 
-    BASE_URL = 'https://api.binance.com'
-    uri = URI("#{BASE_URL}/api/v3/order")
-
     headers = {
       'X-MBX-APIKEY': api_key,
       'Content-Type': 'text/json'
@@ -70,43 +66,10 @@ post '/place_orders' do
 
     binance_response = HTTParty.post(uri, headers: headers, body: params)
 
-    puts binance_response.body
+    order['response'] = JSON.parse(binance_response.body)
   end
 
+  puts JSON.pretty_generate(request_payload)
+
   request_payload.to_json
-end
-
-get '/order' do
-  content_type :json
-  symbol = params[:symbol].to_s
-  side = params[:side].to_s
-  type = params[:type].to_s
-  quantity = params[:quantity].to_s
-  timestamp = params[:timestamp].to_s
-  signature = params[:signature].to_s
-  api_key = params[:api_key].to_s
-  recvWindow = params[:recvWindow].to_s
-
-  params = {
-      symbol: symbol,
-      side: side,
-      type: type,
-      quantity: quantity,
-      recvWindow: recvWindow,
-      timestamp: timestamp,
-      signature: signature
-  }
-
-  BASE_URL = 'https://api.binance.com'
-  uri = URI("#{BASE_URL}/api/v3/order")
-
-  headers = {
-    'X-MBX-APIKEY': api_key,
-    'Content-Type': 'text/json'
-  }
-
-  binance_response = HTTParty.post(uri, headers: headers, body: params)
-
-  binance_response.body
-
 end
