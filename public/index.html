@@ -6,6 +6,10 @@
     width: 250px;
     height: 30px;
   }
+
+  .hideAtLoad {
+    display: none;
+  }
 </style>
 
   <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
@@ -14,7 +18,17 @@
 
   <script>
 
-  var orders;
+    var orders;
+
+    function addTheLimits() {
+      for (var i = 4; i <= 50; i++) {
+        var x = document.getElementById("limit");
+        var option = document.createElement("option");
+        option.text = "Top " + i;
+        option.value = i;
+        x.add(option);
+      }
+    }
 
     function showStepOne() {
       $('.stepOne').show();
@@ -47,6 +61,7 @@
     $(document).ready(function() {
 
       showStepOne();
+      addTheLimits();
       $("#generate_allocations").click(function(){
         usdc_amount = document.getElementById('usdc_amount').value;
         limit = document.getElementById('limit').value;
@@ -64,7 +79,7 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(allocation_specs)}).then(res=>res.json()).then(res => {
-            console.log(res);
+            // console.log(res);
             showStepTwo();
 
             orders = res.orders;
@@ -73,7 +88,7 @@
             var plotlyY = []
             for (var i = 0; i < res.allocations.length; i++) {
               plotlyX.push(res.allocations[i]['symbol']);
-              plotlyY.push(res.allocations[i]['precise_allocation_usdc']);
+              plotlyY.push(res.allocations[i]['quantity_rounded_down_by_step_size']);
             }
             var plotlyData = [{x: plotlyX, y: plotlyY, type: 'bar'}];
             var layout = {title: 'Allocations: Top ' + limit, showlegend: false};
@@ -116,7 +131,7 @@
           orders[i].signature = signature;
           orders[i].api_key = api_key
         }
-        console.log(orders);
+        // console.log(orders);
         document.getElementById("signed_orders").innerHTML = '<pre>' + JSON.stringify(orders,null,2) + '</pre>';
       });
 
@@ -129,13 +144,28 @@
         },
         body: JSON.stringify(orders)}).then(res=>res.json()).then(res => {
           showStepFour();
-          console.log(res);
+          // console.log(res);
           orders = res;
           for (var i = 0; i < res.length; i++) {
             var order = orders[i];
-            console.log(order.symbol,order.response.msg);
+            var ul = document.getElementById("list");
+            var li = document.createElement("li");
+            if (order.response.status === 'Success') {
+              li.appendChild(document.createTextNode("Order Successful | " + order.symbol + " | " + order.response.message));
+            }
+            if (order.response.status === 'Error') {
+              li.appendChild(document.createTextNode("Error | " + order.symbol + " | " + order.response.message));
+            }
+            ul.appendChild(li);
           }
         });
+      });
+
+      $(".begin_again").click(function(){
+        document.getElementById('usdc_amount').value = null;
+        document.getElementById('limit').value = "4";
+        document.getElementById('type').value = "coins";
+        showStepOne();
       });
 
     });
@@ -143,50 +173,46 @@
   </script>
 </head>
 
-
-
-
-
 <body>
   <h1>Accumul8.io</h1>
   <p><pre>Welcome. Accumul8.io is an allocation platform for Binance.</pre></p>
-  <p><input type="number" id="usdc_amount" class="usdc_amount stepOne" placeholder="USDC Amount" min="100" max="500"></p>
-  <p>
-    <select name="type" id="type" class="stepOne">
-      <option value="coins">Coins Only</option>
-      <option value="all">Coins and Tokens</option>
-    </select>
-  </p>
-  <p>
-    <select name="limit" id="limit" class="stepOne">
-      <option value=5>Top 5</option>
-      <option value=6>Top 6</option>
-      <option value=7>Top 7</option>
-      <option value=8>Top 8</option>
-      <option value=9>Top 9</option>
-      <option value=10>Top 10</option>
-      <option value=11>Top 11</option>
-      <option value=12>Top 12</option>
-      <option value=13>Top 13</option>
-      <option value=14>Top 14</option>
-      <option value=15>Top 15</option>
-      <option value=16>Top 16</option>
-      <option value=17>Top 17</option>
-      <option value=18>Top 18</option>
-      <option value=19>Top 19</option>
-      <option value=20>Top 20</option>
-    </select>
-  </p>
-  <p><button id="generate_allocations" class="stepOne">Generate Allocations</button></p>
+  <hr size="1">
 
-  <p><div class="stepTwo" id="plotlyGraph" style="width:600px; height:250px;"></div></p>
-  <p><input type="password" id="api_key" placeholder="Binance API Key" class="stepTwo"> <i class="stepTwo">Your Binance API Key</i></p>
-  <p><input type="password" id="api_secret" placeholder="Binance API Secret" class="stepTwo"> <i class="stepTwo">Your Binance API Secret Key</i></p>
-  <p><button id="generate_signed_orders" class="stepTwo">Generate Signed Orders</button></p>
+  <div class="stepOne">
+    <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount" min="100" max="500"></p>
+    <p>
+      <select name="type" id="type">
+        <option value="coins">Coins Only</option>
+        <option value="all">Coins and Tokens</option>
+      </select>
+    </p>
+    <p>
+      <select name="limit" id="limit">
+      </select>
+    </p>
+    <p><button id="generate_allocations">Generate Allocations</button></p>
+  </div>
 
-  <p><div id="signed_orders" class="stepThree"></div></p>
-  <p><button id="place_orders" class="stepThree">Place Orders</button></p>
+  <div class="stepTwo hideAtLoad">
+    <p><div id="plotlyGraph" style="width:600px; height:250px;"></div></p>
+    <p><input type="password" id="api_key" placeholder="Binance API Key">
+    <p><input type="password" id="api_secret" placeholder="Binance API Secret">
+    <p><button id="generate_signed_orders">Generate Signed Orders</button></p>
+    <p><button class="begin_again">Cancel</button></p>
+  </div>
 
-  <p><div id="orders_complete" class="stepFour">Your Orders are Complete</div></p>
+  <div class="stepThree hideAtLoad">
+    <p><div id="signed_orders"></div></p>
+    <p><button id="place_orders">Place Orders</button></p>
+    <p><button class="begin_again">Cancel</button></p>
+  </div>
+
+  <div class="stepFour hideAtLoad">
+    <p>Orders Sent to Binance</p>
+    <p>
+      <ul id="list">
+      </ul>
+    </p>
+    <p><button class="begin_again">Start Again</button></p>
 </body>
 </html>
