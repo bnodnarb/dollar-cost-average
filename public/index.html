@@ -48,7 +48,6 @@
 
       showStepOne();
       $("#generate_allocations").click(function(){
-        showStepTwo();
         usdc_amount = document.getElementById('usdc_amount').value;
         limit = document.getElementById('limit').value;
         type = document.getElementById('type').value;
@@ -66,6 +65,7 @@
         },
         body: JSON.stringify(allocation_specs)}).then(res=>res.json()).then(res => {
             console.log(res);
+            showStepTwo();
 
             orders = res.orders;
 
