@@ -66,7 +66,17 @@ post '/place_orders' do
 
     binance_response = HTTParty.post(uri, headers: headers, body: params)
 
-    order['response'] = JSON.parse(binance_response.body)
+    order['response'] = {}
+
+    if JSON.parse(binance_response.body).has_key? 'msg'
+      puts 'error'
+      order['response']['status'] = 'Error'
+      order['response']['message'] = JSON.parse(binance_response.body)['msg']
+    else
+      puts 'success'
+      order['response']['status'] = 'Success'
+      order['response']['message'] = 'Order Successful'
+    end
   end
 
   puts JSON.pretty_generate(request_payload)
