@@ -91,10 +91,13 @@
       $("#generate_signed_orders").click(function(){
         showStepThree();
 
+        api_key = document.getElementById('api_key').value;
+        api_secret = document.getElementById('api_secret').value;
+
         store_api_details = document.getElementById('store_api_details').checked;
         if (store_api_details === true) {
-          setCookie('bk1',document.getElementById('api_key').value,7);
-          setCookie('bk2',document.getElementById('api_secret').value,7);
+          setCookie('bk1',api_key,7);
+          setCookie('bk2',api_secret,7);
         } else {
           eraseCookie('bk1');
           eraseCookie('bk2');
