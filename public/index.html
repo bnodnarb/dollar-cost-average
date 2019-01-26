@@ -4,10 +4,12 @@
   <style>
     input, button, select { width: 250px; height: 30px; }
     .hideAtLoad { display: none; }
+    .menu { width: 250px; height:30px; }
   </style>
 
   <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
   <script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
   <script>
 
@@ -59,16 +61,32 @@
     function showStepThree() { $('.stepOne').hide(); $('.stepTwo').hide(); $('.stepThree').show(); $('.stepFour').hide(); }
     function showStepFour() { $('.stepOne').hide(); $('.stepTwo').hide(); $('.stepThree').hide(); $('.stepFour').show(); }
 
+    function showp1() { $('#plotlyGraph1').show(); $('#plotlyGraph2').hide(); $('#plotlyGraph3').hide(); }
+    function showp2() { $('#plotlyGraph1').hide(); $('#plotlyGraph2').show(); $('#plotlyGraph3').hide(); }
+    function showp3() { $('#plotlyGraph1').hide(); $('#plotlyGraph2').hide(); $('#plotlyGraph3').show(); }
+
     $(document).ready(function() {
 
       showStepOne();
       createCryptoAssetLimit();
+      showp1();
 
       $("#generate_allocations").click(function(){
+
+        $('#usdc_amount_error').hide();
+
+        var usdc_amount_min = parseInt(document.getElementById("usdc_amount").min);
+        var usdc_amount = parseInt(document.getElementById("usdc_amount").value);
+
+        if ((usdc_amount < usdc_amount_min) || (document.getElementById("usdc_amount").value == "")) {
+          $('#usdc_amount').after(' <span id="usdc_amount_error">The minimum USDC amount is ' + usdc_amount_min + '</span>')
+          return;
+        }
+
         allocation_specs = {
           limit: document.getElementById('limit').value,
           type: document.getElementById('type').value,
-          usdc_amount: document.getElementById('usdc_amount').value
+          usdc_amount: usdc_amount
         }
 
         fetch(platform_url + "/generate_allocations", {
@@ -85,6 +103,47 @@
               document.getElementById('api_secret').value = binance_api_secret;
             }
             orders = res.orders;
+            console.log(res.allocations);
+
+            var plotlySymbols = []
+            var plotlyQuantity = []
+            var plotlyAdjustedAllocationUSDC = []
+            var plotlyPreciseAllocationUSDC = []
+            for (var i = 0; i < res.allocations.length; i++) {
+              plotlySymbols.push(res.allocations[i]['symbol']);
+              plotlyQuantity.push(res.allocations[i]['quantity_rounded_down_by_step_size']);
+              plotlyAdjustedAllocationUSDC.push(res.allocations[i]['adjusted_allocation_usdc']);
+              plotlyPreciseAllocationUSDC.push(res.allocations[i]['precise_allocation_usdc']);
+            }
+
+            var data = [{x: plotlySymbols, y: plotlyQuantity, type: 'bar'}];
+            var layout = {title: 'Quantity Bar Chart', showlegend: false};
+            Plotly.newPlot('plotlyGraph1', data, layout, {displayModeBar: false});
+
+            var trace1 = {
+              x: plotlySymbols,
+              y: plotlyAdjustedAllocationUSDC,
+              name: 'Calibrated Allocations',
+              type: 'bar'
+            };
+            var trace2 = {
+              x: plotlySymbols,
+              y: plotlyPreciseAllocationUSDC,
+              name: 'Precise Allocations',
+              type: 'bar'
+            };
+            var data = [trace1, trace2];
+            var layout = {barmode: 'group', title: 'Asset Redistribution Chart'};
+            Plotly.newPlot('plotlyGraph2', data, layout, {displayModeBar: false});
+
+            var data = [{
+              values: plotlyAdjustedAllocationUSDC,
+              labels: plotlySymbols,
+              type: 'pie'
+            }];
+            var layout = {title: 'Pie Chart'};
+            Plotly.newPlot('plotlyGraph3', data, layout, {displayModeBar: false});
+
         });
       });
 
@@ -180,7 +239,7 @@
 
   <!-- display step 1, which enables the user to specify an amount and to select the number of crypto assets -->
   <div class="stepOne">
-    <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount" min="100" max="500"></p>
+    <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount (min: 100)" min="100"></p>
     <p><select name="type" id="type"><option value="coins">Coins Only</option><option value="all">Coins and Tokens</option></select></p>
     <p><select name="limit" id="limit"></select></p>
     <p><button id="generate_allocations">Generate Allocations</button></p>
@@ -188,6 +247,10 @@
 
   <!-- display step 2, which enables the user to sign the transactions with their Binance API details (optional storage in local browser) -->
   <div class="stepTwo hideAtLoad">
+    <p><button id="p1btn" class="menu" onclick="showp1()">Quantity Bar Chart</button> <button id="p2btn" class="menu" onclick="showp2()">Asset Redistribution Chart</button> <button id="p3btn" class="menu" onclick="showp3()">Pie Chart</button></p>
+    <p><div id="plotlyGraph1" style="width:1000px; height:350px;"></div></p>
+    <p><div id="plotlyGraph2" style="width:1000px; height:350px;"></div></p>
+    <p><div id="plotlyGraph3" style="width:1000px; height:350px;"></div></p>
     <fieldset>
       <legend>Binance API Details</legend>
       <p><input type="password" id="api_key" placeholder="Binance API Key"></p>
