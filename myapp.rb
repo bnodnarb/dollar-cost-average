@@ -25,10 +25,16 @@ post '/generate_allocations' do
   relevant_crypto_assets = generate_relevant_crypto_assets(coinmarketcap_crypto_assets,binance_crypto_assets)
   overview = generate_overview(coinmarketcap_crypto_assets,binance_crypto_assets)
   allocations = generate_allocations(relevant_crypto_assets)
-  orders = generate_orders(allocations)
-  overview_allocations_and_orders = generate_overview_allocations_and_orders(overview,allocations,orders)
+  if allocations == '{ "insufficient_funds": true }'
+    puts allocations
+    allocations
+  else
+    puts 'hmok'
+    orders = generate_orders(allocations)
+    overview_allocations_and_orders = generate_overview_allocations_and_orders(overview,allocations,orders)
 
-  overview_allocations_and_orders.to_json
+    overview_allocations_and_orders.to_json
+  end
 end
 
 post '/place_orders' do

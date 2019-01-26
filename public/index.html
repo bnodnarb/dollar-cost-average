@@ -5,6 +5,7 @@
     input, button, select { width: 250px; height: 30px; }
     .hideAtLoad { display: none; }
     .menu { width: 250px; height:30px; }
+    .step_1_error { color: #ff0000; }
   </style>
 
   <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
@@ -73,18 +74,19 @@
 
       $("#generate_allocations").click(function(){
 
-        $('#usdc_amount_error').hide();
+        $('.step_1_error').hide();
 
         var usdc_amount_min = parseInt(document.getElementById("usdc_amount").min);
         var usdc_amount = parseInt(document.getElementById("usdc_amount").value);
+        var limit = document.getElementById('limit').value;
 
         if ((usdc_amount < usdc_amount_min) || (document.getElementById("usdc_amount").value == "")) {
-          $('#usdc_amount').after(' <span id="usdc_amount_error">The minimum USDC amount is ' + usdc_amount_min + '</span>')
+          $('#usdc_amount').after(' <span class="step_1_error">The minimum USDC amount is ' + usdc_amount_min + '</span>')
           return;
         }
 
         allocation_specs = {
-          limit: document.getElementById('limit').value,
+          limit: limit,
           type: document.getElementById('type').value,
           usdc_amount: usdc_amount
         }
@@ -93,6 +95,9 @@
         method: 'post',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(allocation_specs)}).then(res=>res.json()).then(res => {
+          if (res.insufficient_funds == true) {
+            $('#limit').after(' <span class="step_1_error">Top ' + limit + ' is too many assets for a USDC amount of ' + usdc_amount + '</span>')
+          } else {
             showStepTwo();
             var binance_api_key = getCookie('bk1');
             if (binance_api_key) {
@@ -143,12 +148,22 @@
             }];
             var layout = {title: 'Pie Chart'};
             Plotly.newPlot('plotlyGraph3', data, layout, {displayModeBar: false});
-
+          }
         });
       });
 
       $("#generate_signed_orders").click(function(){
         showStepThree();
+
+        var timeleft = 59;
+        var downloadTimer = setInterval(function(){
+        timeleft--;
+        document.getElementById("countdowntimer").textContent = timeleft;
+        if (timeleft <= 0) {
+            clearInterval(downloadTimer);
+            $(".begin_again").click();
+          }
+        },1000);
 
         api_key = document.getElementById('api_key').value;
         api_secret = document.getElementById('api_secret').value;
@@ -264,9 +279,10 @@
 
   <!-- display step 3, which enables the user to confirm the signed transactions before placement -->
   <div class="stepThree hideAtLoad">
-    <p><div id="signed_orders"></div></p>
+    <p>Signed orders will expire in <span id="countdowntimer">59 </span> Seconds (you will be returned to step 1)</p>
     <p><button id="place_orders">Place Orders</button></p>
     <p><button class="begin_again">Cancel</button></p>
+    <p><div id="signed_orders"></div></p>
   </div>
 
   <!-- display step 4, which shows a confirmation once the orders have been placed and enables the user to start again -->
