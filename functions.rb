@@ -317,7 +317,7 @@ def calculate_maximum_equalizer_percentage(relevant_crypto_assets)
         viable_percentages << equalizer_percentage
         break
       elsif crypto_asset_passes_filters?(relevant_crypto_asset,even_allocation_percentage,equalizer_percentage) == false && equalizer_percentage == 0
-        abort("Insufficient Funds")
+        return "Insufficient Funds"
       else
       end
     end
@@ -328,6 +328,9 @@ end
 def generate_allocations(relevant_crypto_assets)
   trading_actions_array = []
   maximum_equalizer_percentage = calculate_maximum_equalizer_percentage(relevant_crypto_assets)
+  if maximum_equalizer_percentage == "Insufficient Funds"
+    return '{ "insufficient_funds": true }'
+  end
   even_allocation_percentage = generate_even_allocation_percentage(relevant_crypto_assets)
   relevant_crypto_assets.each do |relevant_crypto_asset|
     step_size = relevant_crypto_asset['filters']['step_size']
