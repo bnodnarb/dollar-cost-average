@@ -12,7 +12,7 @@
   <script>
 
     var orders;
-    var order_placement_url = "http://localhost:4567";
+    var platform_url = "http://localhost:4567";
 
     // populate the "limit" dropdown with the range of top crypto assets that can be traded (default: Top 4 - Top 50)
     function createCryptoAssetLimit() {
@@ -71,7 +71,7 @@
           usdc_amount: document.getElementById('usdc_amount').value
         }
 
-        fetch(order_placement_url + "/generate_allocations", {
+        fetch(platform_url + "/generate_allocations", {
         method: 'post',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(allocation_specs)}).then(res=>res.json()).then(res => {
@@ -114,9 +114,7 @@
               timestamp: Math.floor(Date.now() / 1000) * 1000
           };
 
-          queryString = Object.keys(params).map(function(k) {
-              return encodeURIComponent(k) + '=' + encodeURIComponent(params[k])
-          }).join('&')
+          queryString = $.param(params);
 
           var hmac = forge.hmac.create();
           hmac.start('sha256', api_secret);
@@ -137,7 +135,7 @@
 
       // send the orders to Binance for placement, then show the order confirmation details
       $("#place_orders").click(function(){
-        fetch(order_placement_url + "/place_orders", {
+        fetch(platform_url + "/place_orders", {
         method: 'post',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orders)}).then(res=>res.json()).then(res => {
@@ -163,6 +161,7 @@
         document.getElementById('usdc_amount').value = null;
         document.getElementById('limit').value = "4";
         document.getElementById('type').value = "coins";
+        document.getElementById("list").innerHTML = "";
         showStepOne();
       });
 
