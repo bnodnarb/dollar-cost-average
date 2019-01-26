@@ -3,7 +3,7 @@ require 'sinatra'
 require_relative 'includes.rb'
 
 get '/' do
-  send_file File.join(settings.public_folder, 'index2.html')
+  send_file File.join(settings.public_folder, 'index.html')
 end
 
 post '/generate_allocations' do
