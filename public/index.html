@@ -215,16 +215,6 @@
           })
           orders_to_display[i].logo = 'https://s2.coinmarketcap.com/static/img/coins/64x64/' + result[0].cmc_id + '.png';
         };
-
-        for (var i = 0; i < orders_to_display; i++) {
-          var order = orders_to_display[i];
-          var ul = document.getElementById("signed_orders_list");
-          var li = document.createElement("li");
-          li.appendChild(document.createTextNode(order.symbol + ' ' + order.logo));
-          ul.appendChild(li);
-        }
-
-        document.getElementById("signed_orders").innerHTML = '<pre>' + JSON.stringify(orders_to_display,null,2) + '</pre>';
       });
 
       // send the orders to Binance for placement, then show the order confirmation details
@@ -302,7 +292,6 @@
     <p>Signed orders will expire in <span id="countdowntimer">59 </span> Seconds (you will be returned to step 1)</p>
     <p><button id="place_orders">Place Orders</button></p>
     <p><button class="begin_again">Cancel</button></p>
-    <p><ul id="signed_orders_list"></ul></p>
     <p><div id="signed_orders"></div></p>
   </div>
 
