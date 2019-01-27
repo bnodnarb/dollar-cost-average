@@ -108,6 +108,9 @@
             if (binance_api_secret) {
               document.getElementById('api_secret').value = binance_api_secret;
             }
+            if (binance_api_key && binance_api_secret) {
+              document.getElementById('store_api_details').checked = true;
+            }
             orders = res.orders;
             allocations = res.allocations;
             console.log(res)
@@ -265,7 +268,7 @@
 
   <!-- display step 1, which enables the user to specify an amount and to select the number of crypto assets -->
   <div class="stepOne">
-    <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount (min: 100)" min="100"></p>
+    <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount (min: 50)" min="50"></p>
     <p><select name="type" id="type"><option value="coins">Coins Only</option><option value="all">Coins and Tokens</option></select></p>
     <p><select name="limit" id="limit"></select></p>
     <p><button id="generate_allocations">Generate Allocations</button></p>
