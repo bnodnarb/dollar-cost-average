@@ -353,7 +353,9 @@ def generate_allocations(relevant_crypto_assets)
       'quantity_rounded_down_by_step_size' => quantity_rounded_down_by_step_size,
       'preferred_quote_asset' => relevant_crypto_asset['preferred_quote_asset'],
       'quantity_of_quote_asset' => quantity_of_quote_asset,
-      'step_size' => step_size
+      'step_size' => step_size,
+      'cmc_id' => relevant_crypto_asset['id'],
+      'cmc_order_pair_symbol' => [get_aligned_crypto_asset_symbol(relevant_crypto_asset['symbol']),relevant_crypto_asset['preferred_quote_asset']].join('')
     }
 
     trading_actions_array << trading_actions
