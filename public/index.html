@@ -215,6 +215,8 @@
           })
           orders_to_display[i].logo = 'https://s2.coinmarketcap.com/static/img/coins/64x64/' + result[0].cmc_id + '.png';
         };
+
+        document.getElementById("signed_orders").innerHTML = '<pre>' + JSON.stringify(orders_to_display,null,2) + '</pre>';
       });
 
       // send the orders to Binance for placement, then show the order confirmation details
