@@ -1,0 +1,315 @@
+<html>
+<head>
+
+  <style>
+    input, button, select { width: 250px; height: 30px; }
+    .hideAtLoad { display: none; }
+    .menu { width: 250px; height:30px; }
+    .step_1_error { color: #ff0000; }
+  </style>
+
+  <script src='https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js'></script>
+  <script src = 'https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js'></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <script>
+
+    var orders;
+    var platform_url = "http://localhost:4567";
+    var allocations;
+
+    // populate the "limit" dropdown with the range of top crypto assets that can be traded (default: Top 4 - Top 50)
+    function createCryptoAssetLimit() {
+      for (var i = 4; i <= 50; i++) {
+        var x = document.getElementById("limit");
+        var option = document.createElement("option");
+        option.text = "Top " + i;
+        option.value = i;
+        x.add(option);
+      }
+    }
+
+    // enable the local browser storing of Binance API details (default: disabled)
+    function setCookie(name,value,days) {
+      var expires = "";
+      if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+      }
+      document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+
+    // enable retrieval of locally stored Binance API details (default: disabled)
+    function getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(';');
+      for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+      }
+      return null;
+    }
+
+    // enable erasure of locally stored Binance API details at user's discretion
+    function eraseCookie(name) {
+      document.cookie = name+'=; Max-Age=-99999999;';
+    }
+
+    // functions to progress through steps of process (1. set amount and allocation, 2. enter Binance API details, 3. confirm transactions, 4. review completion)
+    function showStepOne() { $('.stepOne').show(); $('.stepTwo').hide(); $('.stepThree').hide(); $('.stepFour').hide(); }
+    function showStepTwo() { $('.stepOne').hide(); $('.stepTwo').show(); $('.stepThree').hide(); $('.stepFour').hide(); }
+    function showStepThree() { $('.stepOne').hide(); $('.stepTwo').hide(); $('.stepThree').show(); $('.stepFour').hide(); }
+    function showStepFour() { $('.stepOne').hide(); $('.stepTwo').hide(); $('.stepThree').hide(); $('.stepFour').show(); }
+
+    function showp1() { $('#plotlyGraph1').show(); $('#plotlyGraph2').hide(); $('#plotlyGraph3').hide(); }
+    function showp2() { $('#plotlyGraph1').hide(); $('#plotlyGraph2').show(); $('#plotlyGraph3').hide(); }
+    function showp3() { $('#plotlyGraph1').hide(); $('#plotlyGraph2').hide(); $('#plotlyGraph3').show(); }
+
+    $(document).ready(function() {
+
+      showStepOne();
+      createCryptoAssetLimit();
+      showp1();
+
+      $("#generate_allocations").click(function(){
+
+        $('.step_1_error').hide();
+
+        var usdc_amount_min = parseInt(document.getElementById("usdc_amount").min);
+        var usdc_amount = parseInt(document.getElementById("usdc_amount").value);
+        var limit = document.getElementById('limit').value;
+
+        if ((usdc_amount < usdc_amount_min) || (document.getElementById("usdc_amount").value == "")) {
+          $('#usdc_amount').after(' <span class="step_1_error">The minimum USDC amount is ' + usdc_amount_min + '</span>')
+          return;
+        }
+
+        allocation_specs = {
+          limit: limit,
+          type: document.getElementById('type').value,
+          usdc_amount: usdc_amount
+        }
+
+        fetch(platform_url + "/generate_allocations", {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(allocation_specs)}).then(res=>res.json()).then(res => {
+          if (res.insufficient_funds == true) {
+            $('#limit').after(' <span class="step_1_error">Top ' + limit + ' is too many assets for a USDC amount of ' + usdc_amount + '</span>')
+          } else {
+            showStepTwo();
+            var binance_api_key = getCookie('bk1');
+            if (binance_api_key) {
+              document.getElementById('api_key').value = binance_api_key;
+            }
+            var binance_api_secret = getCookie('bk2');
+            if (binance_api_secret) {
+              document.getElementById('api_secret').value = binance_api_secret;
+            }
+            orders = res.orders;
+            allocations = res.allocations;
+            console.log(res)
+
+            var plotlySymbols = []
+            var plotlyQuantity = []
+            var plotlyAdjustedAllocationUSDC = []
+            var plotlyPreciseAllocationUSDC = []
+            for (var i = 0; i < res.allocations.length; i++) {
+              plotlySymbols.push(res.allocations[i]['symbol']);
+              plotlyQuantity.push(res.allocations[i]['quantity_rounded_down_by_step_size']);
+              plotlyAdjustedAllocationUSDC.push(res.allocations[i]['adjusted_allocation_usdc']);
+              plotlyPreciseAllocationUSDC.push(res.allocations[i]['precise_allocation_usdc']);
+            }
+
+            var data = [{x: plotlySymbols, y: plotlyQuantity, type: 'bar'}];
+            var layout = {title: 'Quantity Bar Chart', showlegend: false};
+            Plotly.newPlot('plotlyGraph1', data, layout, {displayModeBar: false});
+
+            var trace1 = {
+              x: plotlySymbols,
+              y: plotlyAdjustedAllocationUSDC,
+              name: 'Calibrated Allocations',
+              type: 'bar'
+            };
+            var trace2 = {
+              x: plotlySymbols,
+              y: plotlyPreciseAllocationUSDC,
+              name: 'Precise Allocations',
+              type: 'bar'
+            };
+            var data = [trace1, trace2];
+            var layout = {barmode: 'group', title: 'Asset Redistribution Chart'};
+            Plotly.newPlot('plotlyGraph2', data, layout, {displayModeBar: false});
+
+            var data = [{
+              values: plotlyAdjustedAllocationUSDC,
+              labels: plotlySymbols,
+              type: 'pie'
+            }];
+            var layout = {title: 'Pie Chart'};
+            Plotly.newPlot('plotlyGraph3', data, layout, {displayModeBar: false});
+          }
+        });
+      });
+
+      $("#generate_signed_orders").click(function(){
+        showStepThree();
+
+        var timeleft = 59;
+        var downloadTimer = setInterval(function(){
+        timeleft--;
+        document.getElementById("countdowntimer").textContent = timeleft;
+        if (timeleft <= 0) {
+            clearInterval(downloadTimer);
+            $(".begin_again").click();
+          }
+        },1000);
+
+        api_key = document.getElementById('api_key').value;
+        api_secret = document.getElementById('api_secret').value;
+
+        store_api_details = document.getElementById('store_api_details').checked;
+        if (store_api_details === true) {
+          setCookie('bk1',api_key,7);
+          setCookie('bk2',api_secret,7);
+        } else {
+          eraseCookie('bk1');
+          eraseCookie('bk2');
+        }
+
+        for (var i = 0; i < orders.length; i++) {
+          var order = orders[i];
+          var params = {
+              symbol: order.symbol,
+              side: 'BUY',
+              type: 'MARKET',
+              quantity: order.quantity,
+              recvWindow: 60000,
+              timestamp: Math.floor(Date.now() / 1000) * 1000
+          };
+
+          queryString = $.param(params);
+
+          var hmac = forge.hmac.create();
+          hmac.start('sha256', api_secret);
+          hmac.update(queryString);
+          signature = hmac.digest().toHex();
+
+          orders[i].symbol = order.symbol;
+          orders[i].side = 'BUY';
+          orders[i].type = 'MARKET';
+          orders[i].quantity = order.quantity;
+          orders[i].recvWindow = 60000;
+          orders[i].timestamp = Math.floor(Date.now() / 1000) * 1000;
+          orders[i].signature = signature;
+          orders[i].api_key = api_key
+        }
+
+        var orders_to_display = orders;
+
+        for (var i = 0; i < orders_to_display.length; i++) {
+          var result = allocations.filter(obj => {
+            return obj.cmc_order_pair_symbol === orders_to_display[i].symbol
+          })
+          orders_to_display[i].logo = 'https://s2.coinmarketcap.com/static/img/coins/64x64/' + result[0].cmc_id + '.png';
+        };
+
+        for (var i = 0; i < orders_to_display; i++) {
+          var order = orders_to_display[i];
+          var ul = document.getElementById("signed_orders_list");
+          var li = document.createElement("li");
+          li.appendChild(document.createTextNode(order.symbol + ' ' + order.logo));
+          ul.appendChild(li);
+        }
+
+        document.getElementById("signed_orders").innerHTML = '<pre>' + JSON.stringify(orders_to_display,null,2) + '</pre>';
+      });
+
+      // send the orders to Binance for placement, then show the order confirmation details
+      $("#place_orders").click(function(){
+        fetch(platform_url + "/place_orders", {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orders)}).then(res=>res.json()).then(res => {
+          showStepFour();
+          orders = res;
+          for (var i = 0; i < res.length; i++) {
+            var order = orders[i];
+            var ul = document.getElementById("list");
+            var li = document.createElement("li");
+            if (order.response.status === 'Success') {
+              li.appendChild(document.createTextNode("Order Successful | " + order.symbol + " | " + order.response.message));
+            }
+            if (order.response.status === 'Error') {
+              li.appendChild(document.createTextNode("Error | " + order.symbol + " | " + order.response.message));
+            }
+            ul.appendChild(li);
+          }
+        });
+      });
+
+      // reset the amount and allocation details if the user clicks the start again button
+      $(".begin_again").click(function(){
+        document.getElementById('usdc_amount').value = null;
+        document.getElementById('limit').value = "4";
+        document.getElementById('type').value = "coins";
+        document.getElementById("list").innerHTML = "";
+        showStepOne();
+      });
+
+    });
+
+  </script>
+</head>
+
+<!-- HTML content visibly displayed on page starts below -->
+
+<body>
+  <!-- display header sentence welcoming the user -->
+  <h1>Accumul8.io</h1>
+  <p><pre>Welcome. Accumul8.io is an allocation platform for Binance.</pre></p>
+  <hr size="1">
+
+  <!-- display step 1, which enables the user to specify an amount and to select the number of crypto assets -->
+  <div class="stepOne">
+    <p><input type="number" id="usdc_amount" class="usdc_amount" placeholder="USDC Amount (min: 100)" min="100"></p>
+    <p><select name="type" id="type"><option value="coins">Coins Only</option><option value="all">Coins and Tokens</option></select></p>
+    <p><select name="limit" id="limit"></select></p>
+    <p><button id="generate_allocations">Generate Allocations</button></p>
+  </div>
+
+  <!-- display step 2, which enables the user to sign the transactions with their Binance API details (optional storage in local browser) -->
+  <div class="stepTwo hideAtLoad">
+    <p><button id="p1btn" class="menu" onclick="showp1()">Quantity Bar Chart</button> <button id="p2btn" class="menu" onclick="showp2()">Asset Redistribution Chart</button> <button id="p3btn" class="menu" onclick="showp3()">Pie Chart</button></p>
+    <p><div id="plotlyGraph1" style="width:1000px; height:350px;"></div></p>
+    <p><div id="plotlyGraph2" style="width:1000px; height:350px;"></div></p>
+    <p><div id="plotlyGraph3" style="width:1000px; height:350px;"></div></p>
+    <fieldset>
+      <legend>Binance API Details</legend>
+      <p><input type="password" id="api_key" placeholder="Binance API Key"></p>
+      <p><input type="password" id="api_secret" placeholder="Binance API Secret"></p>
+      <p><input type="checkbox" id="store_api_details">
+      <label for="store_api_details">Check to keep API details locally in your browser for 7 days (unchecking will erase)</label></p>
+    </fieldset>
+    <p><button id="generate_signed_orders">Generate Signed Orders</button></p>
+    <p><button class="begin_again">Cancel</button></p>
+  </div>
+
+  <!-- display step 3, which enables the user to confirm the signed transactions before placement -->
+  <div class="stepThree hideAtLoad">
+    <p>Signed orders will expire in <span id="countdowntimer">59 </span> Seconds (you will be returned to step 1)</p>
+    <p><button id="place_orders">Place Orders</button></p>
+    <p><button class="begin_again">Cancel</button></p>
+    <p><ul id="signed_orders_list"></ul></p>
+    <p><div id="signed_orders"></div></p>
+  </div>
+
+  <!-- display step 4, which shows a confirmation once the orders have been placed and enables the user to start again -->
+  <div class="stepFour hideAtLoad">
+    <p>Orders Sent to Binance</p>
+    <p><ul id="list"></ul></p>
+    <p><button class="begin_again">Start Again</button></p>
+</body>
+</html>
