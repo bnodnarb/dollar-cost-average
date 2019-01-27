@@ -16,6 +16,7 @@
 
     var orders;
     var platform_url = "http://localhost:4567";
+    var allocations;
 
     // populate the "limit" dropdown with the range of top crypto assets that can be traded (default: Top 4 - Top 50)
     function createCryptoAssetLimit() {
@@ -108,7 +109,8 @@
               document.getElementById('api_secret').value = binance_api_secret;
             }
             orders = res.orders;
-            console.log(res.allocations);
+            allocations = res.allocations;
+            console.log(res)
 
             var plotlySymbols = []
             var plotlyQuantity = []
@@ -204,7 +206,25 @@
           orders[i].signature = signature;
           orders[i].api_key = api_key
         }
-        document.getElementById("signed_orders").innerHTML = '<pre>' + JSON.stringify(orders,null,2) + '</pre>';
+
+        var orders_to_display = orders;
+
+        for (var i = 0; i < orders_to_display.length; i++) {
+          var result = allocations.filter(obj => {
+            return obj.cmc_order_pair_symbol === orders_to_display[i].symbol
+          })
+          orders_to_display[i].logo = 'https://s2.coinmarketcap.com/static/img/coins/64x64/' + result[0].cmc_id + '.png';
+        };
+
+        for (var i = 0; i < orders_to_display; i++) {
+          var order = orders_to_display[i];
+          var ul = document.getElementById("signed_orders_list");
+          var li = document.createElement("li");
+          li.appendChild(document.createTextNode(order.symbol + ' ' + order.logo));
+          ul.appendChild(li);
+        }
+
+        document.getElementById("signed_orders").innerHTML = '<pre>' + JSON.stringify(orders_to_display,null,2) + '</pre>';
       });
 
       // send the orders to Binance for placement, then show the order confirmation details
@@ -282,6 +302,7 @@
     <p>Signed orders will expire in <span id="countdowntimer">59 </span> Seconds (you will be returned to step 1)</p>
     <p><button id="place_orders">Place Orders</button></p>
     <p><button class="begin_again">Cancel</button></p>
+    <p><ul id="signed_orders_list"></ul></p>
     <p><div id="signed_orders"></div></p>
   </div>
 
