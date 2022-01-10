@@ -11,6 +11,3 @@ For example, Alice wants to invest $1,000 per month into an index of cryptocurre
 - binance
 - httparty
 - openssl
-
-## Installation
-TBD
